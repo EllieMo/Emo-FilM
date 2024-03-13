@@ -1,0 +1,31 @@
+Tears	PleasantOther	Predictable	Stop	Anxiety
+Controlled	SocialNorms	Lips	Throat	Muscle
+Fear	Standards	Bad	Strong	AtEase
+Alert	GoalsOther	Repeat	PleasantSelf	Tackle
+Stop	Care	Suddenly	WarmHeartedness	Love
+Anger	PleasantSelf	Sad	Suddenly	Tears
+Attention	Standards	Care	Alert	Urgency
+WarmHeartedness	Command	Happiness	Predictable	Undo
+Urgency	SocialNorms	Lips	Satisfaction	IntenseEmotion
+Fear	Tackle	Suddenly	Command	Surprise
+Move	Agent	Good	Stop	Calm
+Urgency	Tears	Anger	Eyebrows	Throat
+Fear	Guilt	Oppose	Calm	Agent
+Stomach	Standards	Eyebrows	Love	Support
+Good	Throat	Controlled	Bad	GoalsOther
+Care	Disgust	Contempt	Undo	Move
+Anxiety	Guilt	IntenseEmotion	Sad	Contempt
+Smile	Calm	Predictable	Repeat	Oppose
+Shame	Tackle	Frown	Controlled	Happiness
+Strong	Surprise	Repeat	IntenseEmotion	Move
+Strong	Love	GoalsOther	Good	Guilt
+Support	Muscle	Frown	Disgust	PleasantOther
+PleasantOther	Smile	Attention	AtEase	Stomach
+Happiness	Muscle	WarmHeartedness	AtEase
+PleasantSelf	Anger	Eyebrows	Satisfaction
+Anxiety	Lips	Shame	Bad
+Attention	Frown	Satisfaction	Agent
+Sad	Oppose	Surprise	Disgust	Smile
+Contempt	Undo	SocialNorms	Shame
+Support	Alert	Stomach	Command	
+				
