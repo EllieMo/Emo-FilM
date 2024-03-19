@@ -172,7 +172,7 @@ moves = [a for a in all_movies if a not in bad_movies]
 
 ccc = np.load(f"{root}derivatives/ccc_values.npy", allow_pickle=True)
 
-## Plot agreement
+# # Plot agreement
 plt.figure()
 bins = np.arange(-1, 1, 0.05)
 plt.hist(ccc, bins=bins, alpha=0.5, ec="black")
