@@ -16,7 +16,6 @@ This script is everything we did with the validation data returned from the acqu
 """
 import glob
 import json
-import os
 
 # Get some useful packages loaded
 import numpy as np
@@ -117,25 +116,25 @@ for i in subs:
     sidx = int(i[1:])
     items = list(val_its[sidx - 1])
 
-    ## Lists files as returned from our acquisition
+    # ## Lists files as returned from our acquisition
     files = glob.glob(f"{save}sub-{i}/ses*/beh/sub-{i}_*_task-*_events.tsv")
 
-    ## Loop Over list of all _val files
+    # ## Loop Over list of all _val files
     for file in files:
         movie = file.split("_")[-2].split("-")[1]
         movie_idx = movs.index(movie)
 
-        ## Get time stamps for annotated clips
+        # ## Get time stamps for annotated clips
         vTimes = np.asarray(list(val_times[movie]))
 
         vali = pd.read_csv(file, delimiter="\t")
 
-        ## Load validation file
+        # ## Load validation file
 
         vali = np.asarray(vali)
         vali = vali[:, 2:7]
 
-        ## Arrange files to the full length for each item
+        # ## Arrange files to the full length for each item
         for m in range(np.shape(vali)[1]):
             item = vali[:, m]
             itemH = items[m]
@@ -144,7 +143,7 @@ for i in subs:
             for l in range(len(vTimes)):
                 tim = vTimes[l].tolist()
                 try:
-                    n_times[tim[0] : tim[1]] = item[l]
+                    n_times[tim[0]: tim[1]] = item[l]
                 except:
                     continue
                 np.savetxt(
@@ -204,7 +203,7 @@ its = [
     "Sad",
 ]
 
-### makes continuous time course, z-score within subject and saves data
+# ## makes continuous time course, z-score within subject and saves data
 for i in sorted(its):
     for s in subs:
         files = glob.glob(f"{val}validation/sub-{s}_*_{i}.csv")
@@ -224,7 +223,7 @@ for i in sorted(its):
             except:
                 combined = s_val
 
-        ##z-score
+        # ## z-score
         combined = (combined - scipy.nanmean(combined)) / scipy.nanstd(combined)
 
         if np.sum(combined.shape) > 0:
@@ -237,11 +236,11 @@ for i in sorted(its):
                 np.savetxt(f"{val}validation/Z_sub-{s}_{m}_{i}.csv", data)
                 combined = combined[durs[fidx] :]
 
-## read new z-scored data, combine and calculate correlation with consensus annotation
+# ## read new z-scored data, combine and calculate correlation with consensus annotation
 matches = np.zeros([len(movs), len(its)])
 ccc = {}
 for m in movs:
-    ## Read in the consensus annotation
+    # ## Read in the consensus annotation
     gt = read_csv(f"{main}Annot_{m}_stim.tsv.gz", delimiter="\t", header=None)
     gt.columns = j_dic["Columns"]
     for it in its:

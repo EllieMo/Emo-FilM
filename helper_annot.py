@@ -11,10 +11,12 @@ from pandas import read_csv
 from scipy import stats
 
 
-## Function to load the data and do all standard processing (smoothing, replace_nan, zscores ...)
 def load_data(file_name, max_zscore, group, excluded):
+    """
+    Load the data and do all standard processing (smoothing, replace_nan, zscores ...).
+    """
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
-    # series = read_csv(m, header = 8, delimiter=",", names=["x","y"])
+
     temp_y = series["y"]
     temp_y = temp_y.fillna(-1)
     for v in range(len(temp_y) - 1):
@@ -25,13 +27,13 @@ def load_data(file_name, max_zscore, group, excluded):
             temp_y[v] = (temp_y[v - 1] + temp_y[v + w]) / (w + 1)
 
     zrating = stats.zscore(temp_y)
-    # zrating = (temp_y - np.nanmean(temp_y)) / np.nanstd(temp_y)
+
     if sum(temp_y) == -1 or np.std(temp_y) == 0:
         excluded[0] += 1
-        # print(file_name)
+
     elif max(zrating) > max_zscore and min(zrating) > -max_zscore:
         excluded[1] += 1
-        # print(file_name)
+
     elif sum(temp_y) != -1 and max(zrating) < max_zscore:
         if group.size == 0:
             group = temp_y
@@ -43,9 +45,12 @@ def load_data(file_name, max_zscore, group, excluded):
     return group, excluded
 
 
-## Function for CCC
-# CCC = 2 * COVAR[X,Y] / (VAR[X] + VAR[Y] + (E[X] - E[Y])^2)
 def lins_ccc(y_true, y_pred, output="CORR"):
+    """
+    Compute CCC or correlation.
+
+    CCC = 2 * COVAR[X,Y] / (VAR[X] + VAR[Y] + (E[X] - E[Y])^2)
+    """
     t = y_true.mean()
     p = y_pred.mean()
     St = y_true.var()

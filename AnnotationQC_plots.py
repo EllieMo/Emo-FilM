@@ -7,8 +7,6 @@ Created on Wed Jul  5 15:15:36 2023
 
 This makes a lot of plots visualizing the inter-rater correlations from the annot study
 """
-import math
-
 import numpy as np
 import pandas as pd
 import seaborn as sn

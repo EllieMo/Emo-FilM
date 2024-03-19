@@ -5,37 +5,29 @@ Created on Tue Nov 22 09:36:17 2022
 
 @author: elliemorgenroth
 """
-# This is directly from the internet to get larger outputs
-from IPython.core.display import HTML, display
-
-display(HTML("<style>div.output_scroll { height: 44em; }</style>"))
-# Suppress warnings
-import warnings
-
-warnings.filterwarnings("ignore")
 
 import glob
 import itertools
-import json
-import math
 import os
+import warnings
 
-# Get some useful packages loaded
+from IPython.core.display import HTML, display
 import numpy as np
-import pandas as pd
 import seaborn as sn
 from matplotlib import pyplot as plt
-from pandas import DataFrame, read_csv, read_excel
+from pandas import DataFrame, read_csv
 from scipy import stats
 
-from helper_annot import *
+from helper_annot import load_data, lins_ccc
 
+warnings.filterwarnings("ignore")
+display(HTML("<style>div.output_scroll { height: 44em; }</style>"))
 # Set important paths
 # adapt USER and paths for your local environment
 
 root = "/Volumes/Sinergia_Emo/Emo-FilM/"
 out = f"{root}Annotstudy/derivatives/"
-temp = f"/Volumes/Sinergia_Emo/Emo-FilM/temp/"
+temp = "/Volumes/Sinergia_Emo/Emo-FilM/temp/"
 
 # Changes directory to your local path
 os.chdir(root)
@@ -45,7 +37,7 @@ threshold = 0.20  # threshold for removal of files for agreements
 
 # select participants and movies
 # adapt selection of movies and participants if you don't want everything at once
-## Excluded bad movies and items for ease, but will have to go back to check this
+# ## Excluded bad movies and items for ease, but will have to go back to check this
 all_participants = [
     "mode",
     "area",
@@ -163,7 +155,7 @@ its = [
     "Sad",  # ,'Jaw', 'EyesOpen', 'Breathing', 'Movement','Consequences'
 ]
 
-## Different Quality Control information
+# ## Different Quality Control information
 excluded = [0, 0]  # Files excluded for flat or outliers
 bad_ann = []  # List of Bad Annotations, so we can follow which ones they are
 five = []  # List of Files removed because they are worst of five
@@ -176,7 +168,7 @@ numberAnnot = {
 zfiles = True
 saving = False
 
-if zfiles == True:
+if zfiles is True:
     for p in all_participants:  # Loop over participants to find files
         for n in its:  # Loop over items
             group = np.array([])
@@ -200,7 +192,7 @@ if zfiles == True:
             zgroup = stats.zscore(group)
 
             for num, val in enumerate(val_films):
-                zdata = zgroup[0 : moves[val]]
+                zdata = zgroup[0: moves[val]]
                 if len(zdata) not in moves.values():
                     print("ALERT")
 
@@ -212,7 +204,7 @@ if zfiles == True:
                     delimiter="\t",
                 )
 
-## Prepare variables for Agreement, Weights and final Time Courses
+# ## Prepare variables for Agreement, Weights and final Time Courses
 ccc = {}  # All Agreement scores
 mean_ccc = np.ones((len(moves), len(its)))  # Mean Agreement scores
 
@@ -234,7 +226,7 @@ for mix, movie in enumerate(moves):  # Loop over films
                 else:
                     group = np.hstack([group, series])
         if group.shape[1] > 2:
-            ## All things agreement start here as group is completed for this pairing
+            # ## All things agreement start here as group is completed for this pairing
             # First calculate all cccs for this filmxitem combination
             for i, j in enumerate(itertools.combinations(range(group.shape[1]), 2)):
                 ccc[movie + "_" + n + "_" + str(j[0]) + "_" + str(j[1])] = lins_ccc(
@@ -246,9 +238,9 @@ for mix, movie in enumerate(moves):  # Loop over films
                 [ccc[z] for z in ccc.keys() if z.find(movie + "_" + n) == 0]
             )
 
-            ## Find out if leaving one out will improve agreement
-            ccc_loolist = []  ## List of CCCs if one annotator is left out
-            ccc_loo = {}  ## Mean CCCs if one annotator is left out
+            # ## Find out if leaving one out will improve agreement
+            ccc_loolist = []  # ## List of CCCs if one annotator is left out
+            ccc_loo = {}  # ## Mean CCCs if one annotator is left out
             for q in range(group.shape[1]):
                 ccc_loolist = [
                     ccc[z]
@@ -338,10 +330,10 @@ for mix, movie in enumerate(moves):  # Loop over films
             mean_ccc[mix, iix] = best_ccc
             numberAnnot["_4"] += 1
 
-        ## Add final group mean to MeanTC, this is the ground truth
+        # ## Add final group mean to MeanTC, this is the ground truth
         MeanTC[movie + "_" + n] = np.mean(group, axis=1)
 
-## Print QC information
+# ## Print QC information
 print()
 print(f"{str(sum(excluded))} annotations excluded")
 print(f"{str(excluded[0])} annotations removed for flat")
@@ -393,7 +385,7 @@ print(f"var df = {np.mean(np.var(AMTC))}")
 print(f"max df = {np.mean(np.max(AMTC))}")
 print(f"min df = {np.mean(np.min(AMTC))}")
 
-if saving == True:
+if saving is True:
     saveTC = DataFrame(AMTC.transpose())
     saveTC.to_csv(f"{out}C_Annot_FILMS_stim.tsv", sep="\t", header=False, index=False)
 
