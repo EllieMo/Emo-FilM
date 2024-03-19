@@ -60,10 +60,3 @@ def lins_ccc(y_true, y_pred, output="CORR"):
         return 2 * Spt / (St + Sp + (t - p) ** 2)
     else:
         return np.corrcoef(y_true, y_pred)[0, 1]
-
-
-def lists_overlap(list_a, list_b):
-    if any(i in list_a for i in list_b):
-        return True
-    else:
-        return False
