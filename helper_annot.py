@@ -13,34 +13,48 @@ from scipy import stats
 
 def load_data(file_name, max_zscore, group, excluded):
     """
-    Load the data and do all standard processing (smoothing, replace_nan, zscores ...).
+    Load the data and do all standard processing (replace_nan, zscores ...).
     """
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
 
     temp_y = series["y"]
-    temp_y = temp_y.fillna(-1)
-    for v in range(len(temp_y) - 1):
-        if temp_y[v] == -1 and v > 1:
-            w = 1
-            while temp_y[v] == -1 and temp_y[w + v] == -1:
-                w += 1
-            temp_y[v] = (temp_y[v - 1] + temp_y[v + w]) / (w + 1)
+    # @Ellie these if statements are to fix NaNs at the beginning and end of the file, but it might break results.
+    if np.isnan(temp_y[-1]):
+        for w in reversed(range(len(temp_y))):
+            if not np.isnan(temp_y[w]):
+                temp_y[-1] = temp_y[w]
+                break
+    if np.isnan(temp_y[0]):
+        for w in range(len(temp_y)):
+            if not np.isnan(temp_y[w]):
+                temp_y[-1] = temp_y[w]
+                break
+
+    for v in range(1,  len(temp_y) - 1):
+        # @Ellie why is (and was) the script dividing the average between the two extreme values by the number of NaN indexes?
+        # Also why was the loop starting checking from 2?
+        if np.isnan(temp_y[v]):
+            for n, w in enumerate(range(v+1, len(temp_y))):
+                if not np.isnan(temp_y[w]):
+                    temp_y[v] = (temp_y[v-1] + temp_y[w])/(n+2)
+                    break
 
     zrating = stats.zscore(temp_y)
 
-    if sum(temp_y) == -1 or np.std(temp_y) == 0:
+    if np.isnan(sum(temp_y)) or np.std(temp_y) == 0:
         excluded[0] += 1
 
+    # @Ellie why is the min(zrating) > -max_zscore excluding a trace? Shouldn't that be all traces with one number above max_zscore?
     elif max(zrating) > max_zscore and min(zrating) > -max_zscore:
         excluded[1] += 1
 
-    elif sum(temp_y) != -1 and max(zrating) < max_zscore:
+    elif not np.isnan(sum(temp_y)):
         if group.size == 0:
             group = temp_y
         else:
             group = np.hstack((group, temp_y))
     else:
-        print("ALERT")
+        raise Exception("ALERT")
 
     return group, excluded
 
