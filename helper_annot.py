@@ -12,9 +12,7 @@ from scipy import stats
 
 
 def load_data(file_name, max_zscore, group, excluded):
-    """
-    Load the data and do all standard processing (replace_nan, zscores ...).
-    """
+    """Load the data and do all standard processing (replace_nan, zscores ...)."""
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
 
     temp_y = series["y"]
