@@ -16,7 +16,7 @@ def load_data(file_name, max_zscore, group, excluded):
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
 
     temp_y = series["y"]
-    # @Ellie these if statements are to fix NaNs at the beginning and end of the file, but it might break results.
+    # @Ellie :) :) these if statements are to fix NaNs at the beginning and end of the file, but it might break results.
     if np.isnan(temp_y[-1]):
         for w in reversed(range(len(temp_y))):
             if not np.isnan(temp_y[w]):
