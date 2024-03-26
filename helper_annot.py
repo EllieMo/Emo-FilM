@@ -16,7 +16,7 @@ def load_data(file_name, max_zscore, group, excluded):
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
 
     temp_y = series["y"]
-    # @Ellie :) :) these if statements are to fix NaNs at the beginning and end of the file, but it might break results.
+    # Fixing NaNs
     if np.isnan(temp_y[-1]):
         for w in reversed(range(len(temp_y))):
             if not np.isnan(temp_y[w]):
@@ -27,15 +27,9 @@ def load_data(file_name, max_zscore, group, excluded):
             if not np.isnan(temp_y[w]):
                 temp_y[-1] = temp_y[w]
                 break
-
-    for v in range(1,  len(temp_y) - 1):
-        # @Ellie why is (and was) the script dividing the average between the two extreme values by the number of NaN indexes?
-        # Also why was the loop starting checking from 2?
-        if np.isnan(temp_y[v]):
-            for n, w in enumerate(range(v+1, len(temp_y))):
-                if not np.isnan(temp_y[w]):
-                    temp_y[v] = (temp_y[v-1] + temp_y[w])/(n+2)
-                    break
+    np.interp(np.arange(len(temp_y)), 
+          np.arange(len(temp_y))[np.isnan(temp_y) == False], 
+          temp_y[np.isnan(temp_y) == False])
 
     zrating = stats.zscore(temp_y)
 
