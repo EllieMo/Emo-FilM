@@ -10,7 +10,7 @@ import glob
 import itertools
 import os
 import sys
-# import warnings
+import warnings
 
 from IPython.core.display import HTML, display
 import numpy as np
@@ -29,10 +29,11 @@ display(HTML("<style>div.output_scroll { height: 44em; }</style>"))
 # Set important paths
 # adapt USER and paths for your local environment
 
-root = sys.argv[1] if sys.argv > 1 else "/Volumes/Sinergia_Emo/Emo-FilM"
-temp = sys.argv[2] if sys.argv > 2 else "/Volumes/Sinergia_Emo/Emo-FilM/temp/"
-zfiles = sys.argv[3] if sys.argv > 3 else True
-saving = sys.argv[4] if sys.argv > 4 else False
+root = sys.argv[1] if len(sys.argv) > 1 else "/Volumes/Sinergia_Emo/Emo-FilM"
+#make sure the temp directory is EMPTY
+temp = sys.argv[2] if len(sys.argv) > 2 else "/Volumes/Sinergia_Emo/Emo-FilM/temp/"
+zfiles = sys.argv[3] if len(sys.argv) > 3 else True
+saving = sys.argv[4] if len(sys.argv) > 4 else False
 
 out = os.path.join(root, "Annotstudy", "derivatives")
 
@@ -66,9 +67,7 @@ if zfiles is True:
                     print(f"greater 4, {len(files)}")
                 for m in files:
                     pre_excluded = sum(excluded)
-                    group, excluded = load_data(
-                        m, max_zscore, group, excluded
-                    )  # Load data and add to group (or not)
+                    group, excluded = load_data(m, max_zscore, group, excluded)  # Load data and add to group (or not)
                     if pre_excluded < sum(excluded):
                         continue
                     else:
@@ -143,20 +142,16 @@ for mix, movie in enumerate(movies):  # Loop over films
             worst_rater = labels[wr_idx]  # Worst raters label (to find index overall)
         elif group.shape[1] <= 2:
             raise Warning(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
-            raise Warning(
-                "ALERT, this case should NOT happen when all films and items are selected"
-            )
+            raise Warning("ALERT, this case should NOT happen when all films and items are selected")
             mean_ccc[mix, iix] = lins_ccc(group[:, 0], group[:, 1])
 
         if group.shape[1] <= 3:  # If there are only 3 or less annotators
             if (
                 best_ccc - mean_ccc[mix, iix]
             ) >= threshold:  # Check that there isn't a major outlier in these
-                raise Warning(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
-                raise Warning(
-                    f"Agreement is {str(mean_ccc[mix,iix])} instead of {str(best_ccc)}"
-                )
-                print(np.shape(group.shape))
+                warnings.warn(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
+                warnings.warn(f"Agreement is {str(mean_ccc[mix,iix])} instead of {str(best_ccc)}")
+                warnings.warn("Keeping 3 raters anyway")
             numberAnnot["3"] += 1
 
         elif group.shape[1] == 4:  # Standard case is if there are 4 annotators

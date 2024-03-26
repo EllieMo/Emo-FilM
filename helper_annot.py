@@ -16,8 +16,9 @@ def load_data(file_name, max_zscore, group, excluded):
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
 
     temp_y = series["y"]
-    # Fixing NaNs
-    if np.isnan(temp_y[-1]):
+
+    # Fixing NaNs (note the first two cases should not happen)
+    if np.isnan(temp_y.iloc[-1]):
         for w in reversed(range(len(temp_y))):
             if not np.isnan(temp_y[w]):
                 temp_y[-1] = temp_y[w]
@@ -27,19 +28,18 @@ def load_data(file_name, max_zscore, group, excluded):
             if not np.isnan(temp_y[w]):
                 temp_y[-1] = temp_y[w]
                 break
-    np.interp(np.arange(len(temp_y)), 
-          np.arange(len(temp_y))[np.isnan(temp_y) == False], 
-          temp_y[np.isnan(temp_y) == False])
+    # Interpolate any remaining NaNs
+    if temp_y.isna().any():
+        np.interp(np.arange(len(temp_y)), 
+                  np.arange(len(temp_y))[np.isnan(temp_y) == False], 
+                  temp_y[np.isnan(temp_y) == False])
 
     zrating = stats.zscore(temp_y)
 
-    if np.isnan(sum(temp_y)) or np.std(temp_y) == 0:
-        excluded[0] += 1
-
-    # @Ellie why is the min(zrating) > -max_zscore excluding a trace? Shouldn't that be all traces with one number above max_zscore?
-    elif max(zrating) > max_zscore and min(zrating) > -max_zscore:
+    if max(zrating) > max_zscore or min(zrating) < -max_zscore:
         excluded[1] += 1
-
+    elif np.isnan(sum(temp_y)) or np.std(temp_y) == 0:
+        excluded[0] += 1
     elif not np.isnan(sum(temp_y)):
         if group.size == 0:
             group = temp_y

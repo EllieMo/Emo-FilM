@@ -16,11 +16,11 @@ import seaborn as sn
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 
-from constants_emo_film import ITEM_CATS, ITS, MOVES
+from constants_emo_film import ITEM_CATS, ITS, MOVIES
 
 
 # Fix paths according to where everything is and where you want to save things
-root = sys.argv[1] if len(sys.argv) > 1 else "/Volumes/Sinergia_Emo/Emo-FilM/"
+root = sys.argv[1] if len(sys.argv) > 1 else "/Volumes/Sinergia_Emo/Emo-FilM/Annotstudy"
 savedir = sys.argv[2] if len(sys.argv) > 2 else "/Volumes/Sinergia_Emo/EPFL_drive/Sinergia Project/Writing/Data_Paper/Figures/"
 
 ccc = np.load(os.path.join(root, "derivatives", "ccc_values.npy"), allow_pickle=True)
@@ -34,7 +34,7 @@ plt.xlabel("Correlation")
 plt.ylabel("count")
 
 cccixm_df = np.load(os.path.join(root, "derivatives", "mean_ccc.npy"), allow_pickle=True)
-cccixm_df = pd.DataFrame(cccixm_df, index=MOVES, columns=ITS)
+cccixm_df = pd.DataFrame(cccixm_df, index=MOVIES, columns=ITS)
 
 # Sorting doesn't work here, Mean ends up in the middle ...
 # @Ellie What are you trying to do? sort_values sorts the entries by their mean values.
