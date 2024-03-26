@@ -5,37 +5,36 @@ Created on Tue Nov 22 09:36:17 2022
 
 @author: elliemorgenroth
 """
-# This is directly from the internet to get larger outputs
-from IPython.core.display import HTML, display
-
-display(HTML("<style>div.output_scroll { height: 44em; }</style>"))
-# Suppress warnings
-import warnings
-
-warnings.filterwarnings("ignore")
 
 import glob
 import itertools
-import json
-import math
 import os
+import sys
+# import warnings
 
-# Get some useful packages loaded
+from IPython.core.display import HTML, display
 import numpy as np
-import pandas as pd
 import seaborn as sn
 from matplotlib import pyplot as plt
-from pandas import DataFrame, read_csv, read_excel
+from pandas import DataFrame, read_csv
 from scipy import stats
 
-from helper_annot import *
+from constants_emo_film import ALL_PARTICIPANTS_ANNOTATION as all_participants
+from constants_emo_film import ITS
+from constants_emo_film import MOVIES_DICT as movies
+from helper_annot import load_data, lins_ccc
 
+# warnings.filterwarnings("ignore")
+display(HTML("<style>div.output_scroll { height: 44em; }</style>"))
 # Set important paths
 # adapt USER and paths for your local environment
 
-root = "/Volumes/Sinergia_Emo/Emo-FilM/"
-out = f"{root}Annotstudy/derivatives/"
-temp = f"/Volumes/Sinergia_Emo/Emo-FilM/temp/"
+root = sys.argv[1] if sys.argv > 1 else "/Volumes/Sinergia_Emo/Emo-FilM"
+temp = sys.argv[2] if sys.argv > 2 else "/Volumes/Sinergia_Emo/Emo-FilM/temp/"
+zfiles = sys.argv[3] if sys.argv > 3 else True
+saving = sys.argv[4] if sys.argv > 4 else False
+
+out = os.path.join(root, "Annotstudy", "derivatives")
 
 # Changes directory to your local path
 os.chdir(root)
@@ -43,127 +42,7 @@ os.chdir(root)
 max_zscore = 15  # z-threshold for removal of files for outliers
 threshold = 0.20  # threshold for removal of files for agreements
 
-# select participants and movies
-# adapt selection of movies and participants if you don't want everything at once
-## Excluded bad movies and items for ease, but will have to go back to check this
-all_participants = [
-    "mode",
-    "area",
-    "bird",
-    "hall",
-    "user",
-    "oven",
-    "army",
-    "road",
-    "cell",
-    "poem",
-    "food",
-    "town",
-    "year",
-    "news",
-    "goal",
-    "week",
-    "mall",
-    "beer",
-    "gate",
-    "gene",
-    "desk",
-    "unit",
-    "disk",
-    "meat",
-    "king",
-    "debt",
-    "idea",
-    "soup",
-    "city",
-    "girl",
-    "dirt",
-    "role",
-    "poet",
-    "song",
-    "fact",
-    "lake",
-    "bath",
-    "nice",
-    "path",
-    "bite",
-    "loan",
-    "chat",
-    "zone",
-    "zeal",
-]
-
-moves = {
-    "AfterTheRain": 496,
-    "BetweenViewings": 808,
-    "BigBuckBunny": 490,
-    "Chatter": 405,
-    "FirstBite": 599,
-    "LessonLearned": 667,
-    "Payload": 1008,
-    "Sintel": 722,
-    "Spaceman": 805,
-    "Superhero": 1028,
-    "TearsOfSteel": 588,
-    "TheSecretNumber": 784,
-    "ToClaireFromSonny": 402,
-    "YouAgain": 798,  # ,'RidingTheRails':794,'DamagedKungFu':922
-}
-
-its = [
-    "Standards",
-    "PleasantSelf",
-    "SocialNorms",
-    "PleasantOther",
-    "GoalsOther",
-    "Controlled",
-    "Predictable",
-    "Suddenly",
-    "Agent",
-    "Urgency",
-    "Lips",
-    "Tears",
-    "Eyebrows",
-    "Smile",
-    "Frown",
-    "Stop",
-    "Undo",
-    "Repeat",
-    "Oppose",
-    "Attention",
-    "Tackle",
-    "Command",
-    "Support",
-    "Move",
-    "Care",
-    "Bad",
-    "Good",
-    "Calm",
-    "Strong",
-    "IntenseEmotion",
-    "Alert",
-    "AtEase",
-    "Muscle",
-    "Heartrate",
-    "Throat",
-    "Stomach",
-    "Warm",
-    "Anger",
-    "Guilt",
-    "WarmHeartedness",
-    "Disgust",
-    "Happiness",
-    "Fear",
-    "Regard",
-    "Anxiety",
-    "Satisfaction",
-    "Pride",
-    "Surprise",
-    "Love",
-    "Sad",  # ,'Jaw', 'EyesOpen', 'Breathing', 'Movement','Consequences'
-]
-
-## Different Quality Control information
+# ## Different Quality Control information
 excluded = [0, 0]  # Files excluded for flat or outliers
 bad_ann = []  # List of Bad Annotations, so we can follow which ones they are
 five = []  # List of Files removed because they are worst of five
@@ -173,17 +52,15 @@ numberAnnot = {
     "_3": 0,
     "_4": 0,
 }  # number of annotations making a ground truth '_' marks that one was removed for agreement/five
-zfiles = True
-saving = False
 
-if zfiles == True:
+if zfiles is True:
     for p in all_participants:  # Loop over participants to find files
-        for n in its:  # Loop over items
+        for n in ITS:  # Loop over items
             group = np.array([])
             val_films = []
-            for mix, movie in enumerate(moves):  # Loop over films
+            for mix, movie in enumerate(movies):  # Loop over films
                 files = glob.glob(
-                    f"{root}Annotstudy/sub-{p}/beh/sub-{p}_task-{movie}_recording-{n}_stim.tsv.gz"
+                    os.path.join(root, "Annotstudy", f"sub-{p}", "beh", f"sub-{p}_task-{movie}_recording-{n}_stim.tsv.gz")
                 )
                 if len(files) > 4:
                     print(f"greater 4, {len(files)}")
@@ -200,31 +77,31 @@ if zfiles == True:
             zgroup = stats.zscore(group)
 
             for num, val in enumerate(val_films):
-                zdata = zgroup[0 : moves[val]]
-                if len(zdata) not in moves.values():
-                    print("ALERT")
+                zdata = zgroup[0: movies[val]]
+                if len(zdata) not in movies.values():
+                    raise Warning("ALERT")
 
-                zgroup = zgroup[moves[val] :]
+                zgroup = zgroup[movies[val] :]
                 np.savetxt(
-                    f"{temp}sub-{p}_task-{val}_recording-{n}_stim.tsv",
+                    os.path.join(temp, f"sub-{p}_task-{val}_recording-{n}_stim.tsv"),
                     zdata,
                     fmt="%.6f",
                     delimiter="\t",
                 )
 
-## Prepare variables for Agreement, Weights and final Time Courses
+# ## Prepare variables for Agreement, Weights and final Time Courses
 ccc = {}  # All Agreement scores
-mean_ccc = np.ones((len(moves), len(its)))  # Mean Agreement scores
+mean_ccc = np.ones((len(movies), len(ITS)))  # Mean Agreement scores
 
 MeanTC = {}  # Final time courses as a dictionary
-for mix, movie in enumerate(moves):  # Loop over films
-    for iix, n in enumerate(its):  # Loop over items
+for mix, movie in enumerate(movies):  # Loop over films
+    for iix, n in enumerate(ITS):  # Loop over items
         group = np.array([])  # Start with an empty array to put the annotators TCs in
         labels = []  # Empty list of who is annotating this pairing
         for six, p in enumerate(
             all_participants
         ):  # Loop over participants to find files
-            files = glob.glob(f"{temp}sub-{p}_task-{movie}_recording-{n}_stim.tsv")
+            files = glob.glob(os.path.join(temp, f"sub-{p}_task-{movie}_recording-{n}_stim.tsv"))
             for m in files:
                 labels.append(p)  # Append participant labels here
                 pre_excluded = excluded  # Check if the file is used or not
@@ -234,7 +111,7 @@ for mix, movie in enumerate(moves):  # Loop over films
                 else:
                     group = np.hstack([group, series])
         if group.shape[1] > 2:
-            ## All things agreement start here as group is completed for this pairing
+            # ## All things agreement start here as group is completed for this pairing
             # First calculate all cccs for this filmxitem combination
             for i, j in enumerate(itertools.combinations(range(group.shape[1]), 2)):
                 ccc[movie + "_" + n + "_" + str(j[0]) + "_" + str(j[1])] = lins_ccc(
@@ -246,9 +123,9 @@ for mix, movie in enumerate(moves):  # Loop over films
                 [ccc[z] for z in ccc.keys() if z.find(movie + "_" + n) == 0]
             )
 
-            ## Find out if leaving one out will improve agreement
-            ccc_loolist = []  ## List of CCCs if one annotator is left out
-            ccc_loo = {}  ## Mean CCCs if one annotator is left out
+            # ## Find out if leaving one out will improve agreement
+            ccc_loolist = []  # ## List of CCCs if one annotator is left out
+            ccc_loo = {}  # ## Mean CCCs if one annotator is left out
             for q in range(group.shape[1]):
                 ccc_loolist = [
                     ccc[z]
@@ -265,8 +142,8 @@ for mix, movie in enumerate(moves):  # Loop over films
             ]  # Worst raters index in this filmxitem combination
             worst_rater = labels[wr_idx]  # Worst raters label (to find index overall)
         elif group.shape[1] <= 2:
-            print(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
-            print(
+            raise Warning(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
+            raise Warning(
                 "ALERT, this case should NOT happen when all films and items are selected"
             )
             mean_ccc[mix, iix] = lins_ccc(group[:, 0], group[:, 1])
@@ -275,8 +152,8 @@ for mix, movie in enumerate(moves):  # Loop over films
             if (
                 best_ccc - mean_ccc[mix, iix]
             ) >= threshold:  # Check that there isn't a major outlier in these
-                print(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
-                print(
+                raise Warning(f"ALERT, only {str(group.shape[1])} raters left {movie}_{n}")
+                raise Warning(
                     f"Agreement is {str(mean_ccc[mix,iix])} instead of {str(best_ccc)}"
                 )
                 print(np.shape(group.shape))
@@ -338,10 +215,10 @@ for mix, movie in enumerate(moves):  # Loop over films
             mean_ccc[mix, iix] = best_ccc
             numberAnnot["_4"] += 1
 
-        ## Add final group mean to MeanTC, this is the ground truth
+        # ## Add final group mean to MeanTC, this is the ground truth
         MeanTC[movie + "_" + n] = np.mean(group, axis=1)
 
-## Print QC information
+# ## Print QC information
 print()
 print(f"{str(sum(excluded))} annotations excluded")
 print(f"{str(excluded[0])} annotations removed for flat")
@@ -354,17 +231,17 @@ print("Mean of completed CCC values:")
 print(np.nanmean(list(ccc.values())))
 
 ccct = np.array(list(ccc.values()))
-np.save(f"{out}ccc_values", ccct)
-cccixm_df = DataFrame(mean_ccc, index=moves, columns=its)
-np.save(f"{out}mean_ccc", cccixm_df)
+np.save(os.path.join(out, "ccc_values"), ccct)
+cccixm_df = DataFrame(mean_ccc, index=movies, columns=ITS)
+np.save(os.path.join(out, "mean_ccc"), cccixm_df)
 
 durs = []
 AMTC = []
-mfilm = np.zeros([len(its), len(moves)])
+mfilm = np.zeros([len(ITS), len(movies)])
 
-for iix, n in enumerate(its):  # Loop over items
+for iix, n in enumerate(ITS):  # Loop over items
     MTC = []
-    for mix, movie in enumerate(moves):  # Loop over films
+    for mix, movie in enumerate(movies):  # Loop over films
         if iix == 0:
             durs.append(np.shape(MeanTC[movie + "_" + n])[0])
         TC = MeanTC[movie + "_" + n]
@@ -381,10 +258,10 @@ for iix, n in enumerate(its):  # Loop over items
 
 fig = plt.figure(figsize=(15, 5), dpi=300)
 sn.heatmap(
-    mfilm.T, square=True, xticklabels=its, yticklabels=moves, cmap="coolwarm", center=0
+    mfilm.T, square=True, xticklabels=ITS, yticklabels=movies, cmap="coolwarm", center=0
 )
 fig.savefig(
-    "/Volumes/Sinergia_Emo/EPFL_drive/Sinergia Project/Writing/Data_Paper/Figures/Figure2.png",
+    os.path.join(out, "Figure2.png"),
     bbox_inches="tight",
 )
 
@@ -393,13 +270,13 @@ print(f"var df = {np.mean(np.var(AMTC))}")
 print(f"max df = {np.mean(np.max(AMTC))}")
 print(f"min df = {np.mean(np.min(AMTC))}")
 
-if saving == True:
+if saving is True:
     saveTC = DataFrame(AMTC.transpose())
-    saveTC.to_csv(f"{out}C_Annot_FILMS_stim.tsv", sep="\t", header=False, index=False)
+    saveTC.to_csv(os.path.join(out, "C_Annot_FILMS_stim.tsv"), sep="\t", header=False, index=False)
 
-    for mix, movie in enumerate(moves):
-        file = AMTC[:, : moves[movie]]
-        AMTC = AMTC[:, moves[movie] :]
+    for mix, movie in enumerate(movies):
+        file = AMTC[:, : movies[movie]]
+        AMTC = AMTC[:, movies[movie]:]
 
         df = DataFrame(file.transpose())
-        df.to_csv(f"{out}Annot_{movie}_stim.tsv", sep="\t", header=False, index=False)
+        df.to_csv(os.path.join(out, f"Annot_{movie}_stim.tsv"), sep="\t", header=False, index=False)

@@ -9,6 +9,7 @@ Randomized allocation of annotation items to participants for movie fMRI project
 """
 
 import random
+
 import numpy as np
 
 # All items from the study

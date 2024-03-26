@@ -11,41 +11,52 @@ from pandas import read_csv
 from scipy import stats
 
 
-## Function to load the data and do all standard processing (smoothing, replace_nan, zscores ...)
 def load_data(file_name, max_zscore, group, excluded):
+    """Load the data and do all standard processing (replace_nan, zscores ...)."""
     series = read_csv(file_name, header=None, delimiter="\t", names=["y"])
-    # series = read_csv(m, header = 8, delimiter=",", names=["x","y"])
+
     temp_y = series["y"]
-    temp_y = temp_y.fillna(-1)
-    for v in range(len(temp_y) - 1):
-        if temp_y[v] == -1 and v > 1:
-            w = 1
-            while temp_y[v] == -1 and temp_y[w + v] == -1:
-                w += 1
-            temp_y[v] = (temp_y[v - 1] + temp_y[v + w]) / (w + 1)
+    # Fixing NaNs
+    if np.isnan(temp_y[-1]):
+        for w in reversed(range(len(temp_y))):
+            if not np.isnan(temp_y[w]):
+                temp_y[-1] = temp_y[w]
+                break
+    if np.isnan(temp_y[0]):
+        for w in range(len(temp_y)):
+            if not np.isnan(temp_y[w]):
+                temp_y[-1] = temp_y[w]
+                break
+    np.interp(np.arange(len(temp_y)), 
+          np.arange(len(temp_y))[np.isnan(temp_y) == False], 
+          temp_y[np.isnan(temp_y) == False])
 
     zrating = stats.zscore(temp_y)
-    # zrating = (temp_y - np.nanmean(temp_y)) / np.nanstd(temp_y)
-    if sum(temp_y) == -1 or np.std(temp_y) == 0:
+
+    if np.isnan(sum(temp_y)) or np.std(temp_y) == 0:
         excluded[0] += 1
-        # print(file_name)
+
+    # @Ellie why is the min(zrating) > -max_zscore excluding a trace? Shouldn't that be all traces with one number above max_zscore?
     elif max(zrating) > max_zscore and min(zrating) > -max_zscore:
         excluded[1] += 1
-        # print(file_name)
-    elif sum(temp_y) != -1 and max(zrating) < max_zscore:
+
+    elif not np.isnan(sum(temp_y)):
         if group.size == 0:
             group = temp_y
         else:
             group = np.hstack((group, temp_y))
     else:
-        print("ALERT")
+        raise Exception("ALERT")
 
     return group, excluded
 
 
-## Function for CCC
-# CCC = 2 * COVAR[X,Y] / (VAR[X] + VAR[Y] + (E[X] - E[Y])^2)
 def lins_ccc(y_true, y_pred, output="CORR"):
+    """
+    Compute CCC or correlation.
+
+    CCC = 2 * COVAR[X,Y] / (VAR[X] + VAR[Y] + (E[X] - E[Y])^2)
+    """
     t = y_true.mean()
     p = y_pred.mean()
     St = y_true.var()
@@ -55,10 +66,3 @@ def lins_ccc(y_true, y_pred, output="CORR"):
         return 2 * Spt / (St + Sp + (t - p) ** 2)
     else:
         return np.corrcoef(y_true, y_pred)[0, 1]
-
-
-def lists_overlap(list_a, list_b):
-    if any(i in list_a for i in list_b):
-        return True
-    else:
-        return False
